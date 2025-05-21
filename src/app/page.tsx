@@ -1,103 +1,132 @@
-import Image from "next/image";
+'use client'
+import { useState, useEffect } from 'react';
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import axios from 'axios';
 
-export default function Home() {
+interface Book {
+  id: string;
+  volumeInfo: {
+    title: string;
+    authors?: string[];
+  };
+}
+
+interface Rental {
+  title: string;
+  authors: string[];
+  rentedAt: string;
+}
+
+type User = {
+  id: string;
+  name: string;
+  email: string;
+};
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBvr6WRs3z58fawImNXMkJqX1FVtgMBayM",
+  authDomain: "bibliotech-bdb59.firebaseapp.com",
+  projectId: "bibliotech-bdb59",
+  storageBucket: "bibliotech-bdb59.firebasestorage.app",
+  messagingSenderId: "359625955788",
+  appId: "1:359625955788:web:35c48ceb551ec76d77a569"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+export default function LibraryPage() {
+  const [books, setBooks] = useState<Book[]>([]);
+  const [search, setSearch] = useState<string>('');
+  const [rentals, setRentals] = useState<Rental[]>([]);
+
+  useEffect(() => {
+    const fetchRentals = async () => {
+      const querySnapshot = await getDocs(collection(db, 'rentals'));
+      const rentalData: Rental[] = querySnapshot.docs.map(doc => doc.data() as Rental);
+      setRentals(rentalData);
+    };
+    fetchRentals();
+  }, []);
+
+  const searchBooks = async () => {
+    const response = await axios.get(`https://www.googleapis.com/books/v1/volumes?q=${search}`);
+    setBooks(response.data.items || []);
+  };
+
+  const rentBook = async (book: Book) => {
+    try {
+      await addDoc(collection(db, 'rentals'), {
+        title: book.volumeInfo.title,
+        authors: book.volumeInfo.authors || [],
+        rentedAt: new Date().toISOString(),
+      });
+      alert('Livro alugado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao alugar livro:', error);
+      alert('Erro ao alugar livro.');
+    }
+  };
+
+  const deleteBook = async (book: Rental) => {
+    try{
+      await deleteDoc(doc(db, "rentals", `${book.title}`));
+//       await deleteDoc(doc(db, collectionName, docId))
+      alert("livro excluido com sucesso");
+    } catch(error){
+      console.error("Erro ao excluir livro:", error);
+    }
+  }
+
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    fetch('/api/users')
+      .then((response) => response.json())
+      .then((data) => setUsers(data));
+  }, []);
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <div className="p-6 max-w-4xl mx-auto">
+      <h1 className="text-3xl font-bold mb-4">Biblioteca Virtual</h1>
+      <div className="flex gap-2 mb-4">
+        <input
+          className="border p-2 flex-grow"
+          type="text"
+          placeholder="Buscar livro"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
         />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+          onClick={searchBooks}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+          Buscar
+        </button>
+        <div className=''>{rentals.map((rental) => (
+           <div>
+            <h1>Lista de Usuários</h1>
+            <ul>
+              <li key={rental.rentedAt}>{rental.title} ({rental.authors})</li>
+            </ul>
+          </div>
+        ))}</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {books.map((book) => (
+          <div key={book.id} className="border p-4 rounded shadow">
+            <h2 className="text-xl font-semibold">{book.volumeInfo.title}</h2>
+            <p className="text-sm">{book.volumeInfo.authors?.join(', ')}</p>
+            <button
+              className="mt-2 bg-green-500 text-white px-4 py-1 rounded"
+              onClick={() => rentBook(book)}
+            >
+              Alugar
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+ </div>
+  );
 }
