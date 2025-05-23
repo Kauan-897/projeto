@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 interface Book {
   id: string;
@@ -37,6 +38,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 export default function LibraryPage() {
+  const router = useRouter();
   const [books, setBooks] = useState<Book[]>([]);
   const [search, setSearch] = useState<string>('');
   const [rentals, setRentals] = useState<Rental[]>([]);
@@ -69,16 +71,6 @@ export default function LibraryPage() {
     }
   };
 
-  const deleteBook = async (book: Rental) => {
-    try{
-      await deleteDoc(doc(db, "rentals", `${book.title}`));
-//       await deleteDoc(doc(db, collectionName, docId))
-      alert("livro excluido com sucesso");
-    } catch(error){
-      console.error("Erro ao excluir livro:", error);
-    }
-  }
-
   const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
@@ -88,7 +80,8 @@ export default function LibraryPage() {
   }, []);
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <>
+      <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-4">Biblioteca Virtual</h1>
       <div className="flex gap-2 mb-4">
         <input
@@ -104,14 +97,9 @@ export default function LibraryPage() {
         >
           Buscar
         </button>
-        <div className=''>{rentals.map((rental) => (
-           <div>
-            <h1>Lista de Usuários</h1>
-            <ul>
-              <li key={rental.rentedAt}>{rental.title} ({rental.authors})</li>
-            </ul>
-          </div>
-        ))}</div>
+        <button className="bg-sky-400 text-white px-4 py-2 rounded" type="button" onClick={() => router.push('/dashboard')}>
+          Dashboard
+        </button>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {books.map((book) => (
           <div key={book.id} className="border p-4 rounded shadow">
@@ -128,5 +116,7 @@ export default function LibraryPage() {
       </div>
     </div>
  </div>
-  );
+    </>
+  );
 }
+   
