@@ -1,12 +1,12 @@
 'use client'
 import { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc} from 'firebase/firestore';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 
 interface Book {
-  id: string;
+  id: any;
   volumeInfo: {
     title: string;
     authors?: string[];
@@ -14,6 +14,7 @@ interface Book {
 }
 
 interface Rental {
+  id: number;
   title: string;
   authors: string[];
   rentedAt: string;
@@ -60,6 +61,7 @@ export default function LibraryPage() {
   const rentBook = async (book: Book) => {
     try {
       await addDoc(collection(db, 'rentals'), {
+        id: book.id,
         title: book.volumeInfo.title,
         authors: book.volumeInfo.authors || [],
         rentedAt: new Date().toISOString(),
@@ -83,8 +85,9 @@ export default function LibraryPage() {
     <>
       <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-4">Biblioteca Virtual</h1>
-      <div className="flex gap-2 mb-4">
-        <input
+      <div className="">
+        <div className='mb-4 flex gap-2'>
+           <input
           className="border p-2 flex-grow"
           type="text"
           placeholder="Buscar livro"
@@ -100,6 +103,8 @@ export default function LibraryPage() {
         <button className="bg-sky-400 text-white px-4 py-2 rounded" type="button" onClick={() => router.push('/dashboard')}>
           Dashboard
         </button>
+        </div>
+       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {books.map((book) => (
           <div key={book.id} className="border p-4 rounded shadow">

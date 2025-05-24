@@ -5,13 +5,11 @@ import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } 
 import { useRouter } from 'next/navigation';
 
 interface Rental {
-  id: number
+  id: any;
   title: string;
   authors: string[];
   rentedAt: string;
 }
-
-
 
 const firebaseConfig = {
   apiKey: "AIzaSyBvr6WRs3z58fawImNXMkJqX1FVtgMBayM",
@@ -29,8 +27,6 @@ export default function dashboard() {
   const router = useRouter();
   const [rentals, setRentals] = useState<Rental[]>([]);
 
-
-
   useEffect(() => {
     const fetchRentals = async () => {
       const querySnapshot = await getDocs(collection(db, 'rentals'));
@@ -39,6 +35,17 @@ export default function dashboard() {
     };
     fetchRentals();
   }, []);
+
+  async function excluirDocumento(colecao: string, id: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, colecao, id));
+    console.log(`Documento com ID ${id} excluído com sucesso!`);
+  } catch (error) {
+    console.error("Erro ao excluir o documento:", error);
+  }
+}
+
+
   return(
     <div>
         <button className="bg-sky-400 text-white px-4 py-2 rounded mb-4" type="button" onClick={() => router.push('/')}>
@@ -46,10 +53,12 @@ export default function dashboard() {
         </button>
         <h1 className='text-2xl'>Meus Livros</h1>
         <div className='bg-neutral-50 text-black w-3xs p-2 ms-16 rounded'>{rentals.map((rental) => (
-           <div>
+           <div key={rental.id} className='border-b-2 border-neutral-300'>
             <ul className='py-4'>
               <li key={rental.id}>{rental.title} ({rental.authors})</li>
               <button
+              onClick={() => excluirDocumento('rentals', rental.id)} 
+              type='submit'
               className="mt-2 bg-green-500 text-white px-4 py-1 rounded"
             >
               Excluir
