@@ -5,7 +5,7 @@ import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } 
 import { useRouter } from 'next/navigation';
 
 interface Rental {
-  id: any;
+  id: string;
   title: string;
   authors: string[];
   rentedAt: string;
@@ -27,19 +27,27 @@ export default function dashboard() {
   const router = useRouter();
   const [rentals, setRentals] = useState<Rental[]>([]);
 
-  useEffect(() => {
-    const fetchRentals = async () => {
-      const querySnapshot = await getDocs(collection(db, 'rentals'));
-      const rentalData: Rental[] = querySnapshot.docs.map(doc => doc.data() as Rental);
-      setRentals(rentalData);
-    };
-    fetchRentals();
-  }, []);
+ useEffect(() => {
+  const fetchRentals = async () => {
+    const querySnapshot = await getDocs(collection(db, "rentals"));
+    const rentalData: Rental[] = querySnapshot.docs.map(doc => ({
+      id: doc.id, // Adicionando o ID do documento
+      title: doc.data().title,
+      authors: doc.data().authors || [],
+      rentedAt: doc.data().rentedAt || new Date().toISOString(),
+    }) as Rental);
+    setRentals(rentalData);
+  };
+  fetchRentals();
+  
+}, []);
+
 
   async function excluirDocumento(colecao: string, id: string): Promise<void> {
   try {
     await deleteDoc(doc(db, colecao, id));
     console.log(`Documento com ID ${id} excluído com sucesso!`);
+    alert('Documento excluído com sucesso!');
   } catch (error) {
     console.error("Erro ao excluir o documento:", error);
   }

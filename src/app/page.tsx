@@ -57,6 +57,13 @@ export default function LibraryPage() {
     const response = await axios.get(`https://www.googleapis.com/books/v1/volumes?q=${search}`);
     setBooks(response.data.items || []);
   };
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      searchBooks();
+      event.preventDefault(); // Previne o comportamento padrão do Enter
+      // Aqui você pode chamar a função desejada
+    }
+  }
 
   const rentBook = async (book: Book) => {
     try {
@@ -91,7 +98,8 @@ export default function LibraryPage() {
           className="border p-2 flex-grow"
           type="text"
           placeholder="Buscar livro"
-          value={search}
+          value={search} 
+          onKeyDown={handleKeyDown} 
           onChange={(e) => setSearch(e.target.value)}
         />
         <button
@@ -107,7 +115,7 @@ export default function LibraryPage() {
        
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {books.map((book) => (
-          <div key={book.id} className="border p-4 rounded shadow">
+          <div key={book.id} id='myButton' className="border p-4 rounded shadow">
             <h2 className="text-xl font-semibold">{book.volumeInfo.title}</h2>
             <p className="text-sm">{book.volumeInfo.authors?.join(', ')}</p>
             <button
@@ -115,6 +123,12 @@ export default function LibraryPage() {
               onClick={() => rentBook(book)}
             >
               Alugar
+            </button>
+            <button
+              className="mt-2 bg-green-500 text-white px-4 py-1 rounded"
+              onClick={() => router.push('/description/'+book.id)}
+            >
+              Descrição
             </button>
           </div>
         ))}
@@ -124,4 +138,3 @@ export default function LibraryPage() {
     </>
   );
 }
-   
