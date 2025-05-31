@@ -1,12 +1,12 @@
-'use client'
+"use client";
 import { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc} from 'firebase/firestore';
+import { getFirestore, collection, addDoc, getDocs} from 'firebase/firestore';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 
 interface Book {
-  id: any;
+  id: string;
   volumeInfo: {
     title: string;
     authors?: string[];
@@ -36,7 +36,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+export const db = getFirestore(app);
 
 export default function LibraryPage() {
   const router = useRouter();
@@ -118,7 +118,8 @@ export default function LibraryPage() {
           <div key={book.id} id='myButton' className="border p-4 rounded shadow">
             <h2 className="text-xl font-semibold">{book.volumeInfo.title}</h2>
             <p className="text-sm">{book.volumeInfo.authors?.join(', ')}</p>
-            <button
+            <div className='flex justify-evenly items-center'>
+              <button
               className="mt-2 bg-green-500 text-white px-4 py-1 rounded"
               onClick={() => rentBook(book)}
             >
@@ -130,6 +131,7 @@ export default function LibraryPage() {
             >
               Descrição
             </button>
+            </div>
           </div>
         ))}
       </div>
