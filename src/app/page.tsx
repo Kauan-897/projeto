@@ -1,142 +1,102 @@
-"use client";
-import { useState, useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, getDocs} from 'firebase/firestore';
-import axios from 'axios';
-import { useRouter } from 'next/navigation';
-
-interface Book {
-  id: string;
-  volumeInfo: {
-    title: string;
-    authors?: string[];
-  };
-}
-
-interface Rental {
-  id: number;
-  title: string;
-  authors: string[];
-  rentedAt: string;
-}
-
-type User = {
-  id: string;
-  name: string;
-  email: string;
-};
+'use client';
+import { useState } from "react";
+import { initializeApp } from "firebase/app";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { useRouter } from "next/navigation";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBvr6WRs3z58fawImNXMkJqX1FVtgMBayM",
-  authDomain: "bibliotech-bdb59.firebaseapp.com",
-  projectId: "bibliotech-bdb59",
-  storageBucket: "bibliotech-bdb59.firebasestorage.app",
-  messagingSenderId: "359625955788",
-  appId: "1:359625955788:web:35c48ceb551ec76d77a569"
+  apiKey: "AIzaSyAC2d52ypqETnYEwWAbEP7TWu_BHLx4Amc",
+  authDomain: "bibliotech-ae2df.firebaseapp.com",
+  projectId: "bibliotech-ae2df",
+  storageBucket: "bibliotech-ae2df.firebasestorage.app",
+  messagingSenderId: "279937033653",
+  appId: "1:279937033653:web:559d80f82816af809065fc"
 };
 
+// Inicializa Firebase
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+const auth = getAuth(app);
 
-export default function LibraryPage() {
+export default function LoginPage() {
   const router = useRouter();
-  const [books, setBooks] = useState<Book[]>([]);
-  const [search, setSearch] = useState<string>('');
-  const [rentals, setRentals] = useState<Rental[]>([]);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchRentals = async () => {
-      const querySnapshot = await getDocs(collection(db, 'rentals'));
-      const rentalData: Rental[] = querySnapshot.docs.map(doc => doc.data() as Rental);
-      setRentals(rentalData);
-    };
-    fetchRentals();
-  }, []);
-
-  const searchBooks = async () => {
-    const response = await axios.get(`https://www.googleapis.com/books/v1/volumes?q=${search}`);
-    setBooks(response.data.items || []);
-  };
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      searchBooks();
-      event.preventDefault(); // Previne o comportamento padrão do Enter
-      // Aqui você pode chamar a função desejada
-    }
-  }
-
-  const rentBook = async (book: Book) => {
+  const handleLogin = async () => {
     try {
-      await addDoc(collection(db, 'rentals'), {
-        id: book.id,
-        title: book.volumeInfo.title,
-        authors: book.volumeInfo.authors || [],
-        rentedAt: new Date().toISOString(),
-      });
-      alert('Livro alugado com sucesso!');
-    } catch (error) {
-      console.error('Erro ao alugar livro:', error);
-      alert('Erro ao alugar livro.');
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push("/dashboard"); // 🔥 Redireciona após login
+    } catch (error: any) {
+      setError("Erro ao fazer login. Verifique suas credenciais.");
     }
   };
 
-  const [users, setUsers] = useState<User[]>([]);
+  const handleRegister = async () => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      await updateProfile(user, { displayName: name });
 
-  useEffect(() => {
-    fetch('/api/users')
-      .then((response) => response.json())
-      .then((data) => setUsers(data));
-  }, []);
+      alert("Cadastro realizado com sucesso! Faça login.");
+    } catch (error: any) {
+      setError("Erro ao cadastrar. Verifique os dados inseridos.");
+    }
+  };
 
   return (
-    <>
-      <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-4">Biblioteca Virtual</h1>
-      <div className="">
-        <div className='mb-4 flex gap-2'>
-           <input
-          className="border p-2 flex-grow"
-          type="text"
-          placeholder="Buscar livro"
-          value={search} 
-          onKeyDown={handleKeyDown} 
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-          onClick={searchBooks}
-        >
-          Buscar
-        </button>
-        <button className="bg-sky-400 text-white px-4 py-2 rounded" type="button" onClick={() => router.push('/dashboard')}>
-          Dashboard
-        </button>
+    <div className="bg-cover bg-center bg-no-repeat min-h-screen flex justify-center items-center"
+         style={{ backgroundImage: `url('https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=1600&q=80')` }}>
+      
+      {/* Card centralizado */}
+      <div className="p-6 bg-white shadow-lg rounded-lg max-w-md w-full text-center">
+        <h1 className="text-3xl font-bold text-blue-700 mb-4">🔑 Acesse sua conta</h1>
+
+        {/* Mensagem de erro */}
+        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+
+        {/* Campos de entrada */}
+        <div className="space-y-3">
+          <input
+            type="text"
+            placeholder="Nome"
+            className="border p-2 w-full rounded-lg bg-gray-100"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            className="border p-2 w-full rounded-lg bg-gray-100"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input
+            type="password"
+            placeholder="Senha"
+            className="border p-2 w-full rounded-lg bg-gray-100"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </div>
-       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {books.map((book) => (
-          <div key={book.id} id='myButton' className="border p-4 rounded shadow">
-            <h2 className="text-xl font-semibold">{book.volumeInfo.title}</h2>
-            <p className="text-sm">{book.volumeInfo.authors?.join(', ')}</p>
-            <div className='flex justify-evenly items-center'>
-              <button
-              className="mt-2 bg-green-500 text-white px-4 py-1 rounded"
-              onClick={() => rentBook(book)}
-            >
-              Alugar
-            </button>
-            <button
-              className="mt-2 bg-green-500 text-white px-4 py-1 rounded"
-              onClick={() => router.push('/description/'+book.id)}
-            >
-              Descrição
-            </button>
-            </div>
-          </div>
-        ))}
+
+        {/* Botões */}
+        <div className="space-y-2 mt-4">
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg w-full hover:bg-blue-800 transition"
+            onClick={handleLogin}
+          >
+            Entrar
+          </button>
+          <button
+            className="bg-green-600 text-white px-4 py-2 rounded-lg w-full hover:bg-green-800 transition"
+            onClick={handleRegister}
+          >
+            Cadastrar
+          </button>
+        </div>
       </div>
-    </div>
- </div>
-    </>
+    </div>
   );
 }
