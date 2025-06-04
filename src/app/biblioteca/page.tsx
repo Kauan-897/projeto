@@ -73,7 +73,7 @@ export default function BibliotecaPage() {
 
   return (
     <div className="bg-cover bg-center bg-no-repeat min-h-screen" 
-         style={{ backgroundImage: `url('https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=1600&q=80')` }}>
+         style={{ backgroundImage: `url('https://images.unsplash.com/photo-1652860913151-4e670e684c16?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')` }}>
       
       {/* ✅ Agora o Header recebe o usuário autenticado */}
       <Header user={user} currentPage='biblioteca'/>
@@ -86,7 +86,7 @@ export default function BibliotecaPage() {
           {/* Lista de Livros Alugados */}
           <div className="space-y-4">
             {rentals.length > 0 ? rentals.map((rental) => (
-              <div key={rental.id} className="border p-4 rounded-lg shadow-sm bg-gray-50">
+              <div key={rental.id} className="border p-4 rounded-lg shadow-sm bg-gray-100">
                 <h2 className="text-xl font-semibold text-gray-800">{rental.title}</h2>
                 <p className="text-sm text-gray-600">{rental.authors?.join(', ')}</p>
                 <div className="flex justify-end mt-3">

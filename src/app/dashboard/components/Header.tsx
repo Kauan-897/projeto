@@ -1,5 +1,6 @@
 import { User } from "firebase/auth";
 import { useRouter } from "next/navigation";
+import { getAuth, signOut } from "firebase/auth";
 
 interface HeaderProps {
   user: User | null;
@@ -8,6 +9,18 @@ interface HeaderProps {
 
 export default function Header({ user, currentPage }: HeaderProps) {
   const router = useRouter();
+  const auth = getAuth();
+
+  const handleLogout = async () => {
+  try {
+    await signOut(auth);
+    alert("Logout realizado com sucesso!");
+    router.push("/") // Redireciona para login
+  } catch (error) {
+    console.error("Erro ao sair:", error);
+    alert("Erro ao sair da conta.");
+  }
+};
 
   return (
     <header className="bg-blue-900 text-white p-4 flex justify-between items-center shadow-lg">
@@ -33,6 +46,12 @@ export default function Header({ user, currentPage }: HeaderProps) {
         <button className="bg-white text-blue-900 px-4 py-2 rounded-md font-semibold hover:bg-blue-700 hover:text-white transition"
           onClick={() => router.push("/")}>
           🔑 Login
+        </button>
+        <button 
+          className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
+          onClick={handleLogout}
+        >
+          🚪 Sair
         </button>
       </nav>
 

@@ -12,8 +12,10 @@ interface Book {
   volumeInfo: {
     title: string;
     authors?: string[];
+    imageLinks?: { thumbnail: string }; // Adicionado para exibir a capa
   };
 }
+
 
 interface Rental {
   id: number;
@@ -44,7 +46,10 @@ export default function LibraryPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [books, setBooks] = useState<Book[]>([]);
-  const [search, setSearch] = useState<string>(searchParams.get("q") || '');
+  const [search, setSearch] = useState<string>(
+  typeof window !== "undefined" ? localStorage.getItem("searchQuery") || '' : ''
+);
+
   const [rentals, setRentals] = useState<Rental[]>([]);
   const auth = getAuth();
   const [login, setLogin] = useState<User | null>(null);
@@ -58,18 +63,6 @@ export default function LibraryPage() {
     };
     fetchRentals();
   }, []);
-
-  useEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      router.push("/login"); 
-    } else {
-      setLogin(user);
-    }
-  });
-
-  return () => unsubscribe(); 
-}, [auth, router]);
 
   const searchBooks = async () => {
   const response = await axios.get(`https://www.googleapis.com/books/v1/volumes?q=${search}`);
@@ -86,6 +79,15 @@ export default function LibraryPage() {
     }
 
   }
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  setSearch(e.target.value);
+
+  if (typeof window !== "undefined") {
+    localStorage.setItem("searchQuery", e.target.value);
+  }
+};
+
 
   const rentBook = async (book: Book) => {
     try {
@@ -108,24 +110,44 @@ export default function LibraryPage() {
       .then((data) => setUsers(data));
   }, []);
 
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (loggedUser) => {
+      if (!loggedUser) {
+        router.push("/"); // Redireciona para a página de login
+      } else {
+        setLogin(loggedUser);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [auth, router]);
+
+  if (!login) {
+    return <p className="text-center text-gray-700">Carregando...</p>; // Evita mostrar o conteúdo antes de verificar o login
+  }
   return (
-    <div className='bg-cover bg-center bg-no-repeat min-h-screen' style={{ backgroundImage: `url('https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=1600&q=80')` }}>
+    <div className='bg-cover bg-center bg-no-repeat min-h-screen' style={{ backgroundImage: `url('https://images.unsplash.com/photo-1604866830893-c13cafa515d5?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)` }}>
         <div className="p-6 max-w-4xl mx-auto">
         <Header user={login} currentPage="dashboard"/>
 
       {/* Biblioteca Virtual */}
-      <h1 className="text-4xl font-bold mt-6 text-center text-white">Biblioteca Virtual</h1>
+      <div className='bg-slate-200 w-96 h-20 ml-50 mt-6 flex justify-center rounded-lg'>
+        <h1 className="text-4xl font-bold mt-6 text-center text-black">Biblioteca Virtual</h1>
+      </div>
+      
 
       {/* Barra de pesquisa */}
       <div className="flex gap-4 mt-6">
         <input
-          className="border p-2 flex-grow rounded-lg bg-amber-50"
-          type="text"
-          placeholder="Buscar livro"
-          value={search}
-          onKeyDown={handleKeyDown}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+  className="border p-2 flex-grow rounded-lg bg-amber-50"
+  type="text"
+  placeholder="Buscar livro"
+  value={search}
+  onKeyDown={handleKeyDown}
+  onChange={handleSearchChange} // Agora salva no localStorage
+/>
+
         <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition">
           🔍 Buscar
         </button>
@@ -133,24 +155,35 @@ export default function LibraryPage() {
       </div>
 
       {/* Grid de Livros */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-        {books.map((book) => (
-          <div key={book.id} className="border p-4 rounded-lg shadow-lg bg-white">
-            <h2 className="text-xl font-semibold text-gray-900">{book.volumeInfo.title}</h2>
-            <p className="text-sm text-gray-600">{book.volumeInfo.authors?.join(', ')}</p>
-            <div className="flex justify-between items-center mt-4">
-              <button className="bg-green-500 text-white px-4 py-1 rounded-lg hover:bg-green-700 transition"
-                onClick={() => rentBook(book)}>
-                📕 Alugar
-              </button>
-              <button className="bg-yellow-500 text-white px-4 py-1 rounded-lg hover:bg-yellow-700 transition"
-                onClick={() => router.push('/description/' + book.id)}>
-                📖 Descrição
-              </button>
-            </div>
-          </div>
-        ))}
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+  {books.map((book) => (
+    <div key={book.id} className="border p-4 rounded-lg shadow-lg bg-white flex flex-col items-center">
+      {/* Exibir a capa do livro */}
+      {book.volumeInfo.imageLinks?.thumbnail && (
+        <img 
+          src={book.volumeInfo.imageLinks.thumbnail} 
+          alt={`Capa do livro ${book.volumeInfo.title}`} 
+          className="w-32 h-48 object-cover rounded"
+        />
+      )}
+
+      <h2 className="text-xl font-semibold text-gray-900 mt-2">{book.volumeInfo.title}</h2>
+      <p className="text-sm text-gray-600">{book.volumeInfo.authors?.join(', ')}</p>
+      
+      <div className="flex justify-between items-center mt-4">
+        <button className="bg-green-500 text-white px-4 py-1 rounded-lg hover:bg-green-700 transition"
+          onClick={() => rentBook(book)}>
+          📕 Alugar
+        </button>
+        <button className="bg-yellow-500 text-white px-4 py-1 rounded-lg hover:bg-yellow-700 transition"
+          onClick={() => router.push('/description/' + book.id)}>
+          📖 Descrição
+        </button>
       </div>
+    </div>
+  ))}
+</div>
+
     </div>
     </div>
   );

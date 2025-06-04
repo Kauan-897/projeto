@@ -27,7 +27,7 @@ export default function LoginPage() {
   const handleLogin = async () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push("/dashboard"); // 🔥 Redireciona após login
+      router.push("/dashboard"); 
     } catch (error: any) {
       setError("Erro ao fazer login. Verifique suas credenciais.");
     }

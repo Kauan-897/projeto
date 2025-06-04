@@ -22,10 +22,10 @@ export default async function BookPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="bg-cover bg-center bg-no-repeat min-h-screen flex justify-center items-center"
-         style={{ backgroundImage: `url('https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=1600&q=80')` }}>
+         style={{ backgroundImage: `url('https://images.unsplash.com/photo-1706250718869-677489d2691d?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')` }}>
       
       {/* Card do Livro */}
-      <div className="p-6 bg-white shadow-lg rounded-lg max-w-lg w-full">
+      <div className="p-6 bg-slate-50 shadow-lg rounded-lg max-w-lg w-full">
         {/* Imagem do Livro */}
         {book.volumeInfo.imageLinks?.thumbnail && (
           <img src={book.volumeInfo.imageLinks?.extraLarge 
